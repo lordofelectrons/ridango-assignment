@@ -96,7 +96,10 @@ fun NewsListScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { viewModel.loadArticles() }) {
+                    IconButton(onClick = {
+                        coroutineScope.launch { gridState.scrollToItem(0) }
+                        viewModel.loadArticles()
+                    }) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
                             contentDescription = "Reload"
