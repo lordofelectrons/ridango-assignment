@@ -23,11 +23,10 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Create local.properties
-        # NEWS_API_KEY secret is optional — build and tests pass without it.
-        # Only needed if you want the CI-built APK to make real API calls.
-        run: |
-          echo "sdk.dir=$ANDROID_HOME" > local.properties
-          echo "NEWS_API_KEY=${{ secrets.NEWS_API_KEY }}" >> local.properties
+        run: echo "sdk.dir=$ANDROID_HOME" > local.properties
+
+      - name: Grant execute permission to gradlew
+        run: chmod +x gradlew
 
       - name: Build debug APK
         run: ./gradlew assembleDebug
