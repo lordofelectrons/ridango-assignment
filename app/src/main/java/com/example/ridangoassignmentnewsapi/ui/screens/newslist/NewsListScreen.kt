@@ -1,6 +1,9 @@
 package com.example.ridangoassignmentnewsapi.ui.screens.newslist
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,12 +13,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -31,8 +37,10 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import com.example.ridangoassignmentnewsapi.domain.model.Article
 import com.example.ridangoassignmentnewsapi.ui.components.ErrorState
 import com.example.ridangoassignmentnewsapi.ui.components.LoadingIndicator
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,6 +61,9 @@ fun NewsListScreen(
     val configuration = LocalConfiguration.current
     val columns = if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) 3 else 2
     val snackbarHostState = remember { SnackbarHostState() }
+    val gridState = rememberLazyGridState()
+    val coroutineScope = rememberCoroutineScope()
+    val showScrollToTop by remember { derivedStateOf { gridState.firstVisibleItemIndex > 0 } }
 
     // Show error as Snackbar when articles are already loaded
     LaunchedEffect(uiState.error) {
@@ -92,7 +104,23 @@ fun NewsListScreen(
                 }
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        floatingActionButton = {
+            AnimatedVisibility(
+                visible = showScrollToTop,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                FloatingActionButton(
+                    onClick = { coroutineScope.launch { gridState.animateScrollToItem(0) } }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.KeyboardArrowUp,
+                        contentDescription = "Scroll to top"
+                    )
+                }
+            }
+        }
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
             when {
@@ -112,6 +140,7 @@ fun NewsListScreen(
                             articles = uiState.articles,
                             columns = columns,
                             isLoadingMore = uiState.isLoadingMore,
+                            gridState = gridState,
                             onArticleClick = onArticleClick,
                             onLoadMore = { viewModel.loadNextPage() },
                             modifier = Modifier.weight(1f)
@@ -128,12 +157,11 @@ private fun ArticleGrid(
     articles: List<Article>,
     columns: Int,
     isLoadingMore: Boolean,
+    gridState: LazyGridState,
     onArticleClick: (Article) -> Unit,
     onLoadMore: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val gridState = rememberLazyGridState()
-
     LaunchedEffect(gridState) {
         snapshotFlow {
             val layoutInfo = gridState.layoutInfo
