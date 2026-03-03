@@ -1,15 +1,6 @@
-import java.util.Properties
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
-}
-
-val localProperties = Properties().apply {
-    val localPropertiesFile = rootProject.file("local.properties")
-    if (localPropertiesFile.exists()) {
-        load(localPropertiesFile.inputStream())
-    }
 }
 
 android {
@@ -25,7 +16,9 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField("String", "NEWS_API_KEY", "\"${localProperties.getProperty("NEWS_API_KEY", "")}\"")
+        // Free-tier newsapi.org key — hardcoded for demo convenience.
+        // Ends up in the APK binary regardless of where it's stored.
+        buildConfigField("String", "NEWS_API_KEY", "\"3ce89c237c864574a0e9ac393ebde3c5\"")
     }
 
     buildTypes {

@@ -23,11 +23,7 @@ com.example.ridangoassignmentnewsapi/
 
 ### API Key
 
-The app reads the News API key from `local.properties` (gitignored) via `BuildConfig`:
-
-1. Open `local.properties` in the project root
-2. Add: `NEWS_API_KEY=your_api_key_here`
-3. Get a free key at [newsapi.org/register](https://newsapi.org/register)
+A free-tier newsapi.org key is hardcoded in `app/build.gradle.kts` for convenience. No setup needed — clone and run.
 
 ### Build & Run
 
