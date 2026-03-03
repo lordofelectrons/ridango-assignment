@@ -2,6 +2,7 @@ package com.example.ridangoassignmentnewsapi.di
 
 import android.content.Context
 import com.example.ridangoassignmentnewsapi.data.local.ArticleCache
+import com.example.ridangoassignmentnewsapi.data.local.ArticleCacheImpl
 import com.example.ridangoassignmentnewsapi.data.remote.NewsApiService
 import com.example.ridangoassignmentnewsapi.data.repository.NewsRepository
 import com.example.ridangoassignmentnewsapi.data.repository.NewsRepositoryImpl
@@ -39,6 +40,6 @@ object ServiceLocator {
     }
 
     fun articleCache(context: Context): ArticleCache {
-        return ArticleCache(context.applicationContext)
+        return ArticleCacheImpl(context.applicationContext)
     }
 }

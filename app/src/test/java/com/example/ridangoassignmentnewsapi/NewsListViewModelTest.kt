@@ -143,4 +143,97 @@ class NewsListViewModelTest {
 
         assertEquals(3, fakeRepository.callCount) // 1 initial + 1 next page (second call ignored)
     }
+
+    @Test
+    fun `disk cache is shown immediately then replaced by fresh data`() = runTest {
+        val cachedArticles = createArticles(5)
+        val fakeCache = FakeArticleCache()
+        fakeCache.save(cachedArticles)
+
+        val freshArticles = createArticles(20)
+        fakeRepository.articlesToReturn = freshArticles
+        fakeRepository.totalResults = 50
+
+        val viewModel = NewsListViewModel(fakeRepository, fakeCache)
+
+        // Before network completes, disk cache is shown
+        val stateBeforeNetwork = viewModel.uiState.value
+        assertEquals(5, stateBeforeNetwork.articles.size)
+
+        advanceUntilIdle()
+
+        // After network completes, fresh data replaces cache
+        val state = viewModel.uiState.value
+        assertEquals(20, state.articles.size)
+        assertEquals("Title 1", state.articles[0].title)
+    }
+
+    @Test
+    fun `pagination works after loading from disk cache`() = runTest {
+        val cachedArticles = createArticles(5)
+        val fakeCache = FakeArticleCache()
+        fakeCache.save(cachedArticles)
+
+        fakeRepository.articlesToReturn = createArticles(20)
+        fakeRepository.totalResults = 60
+
+        val viewModel = NewsListViewModel(fakeRepository, fakeCache)
+        advanceUntilIdle()
+
+        // hasMorePages should be true, pagination should work
+        assertTrue(viewModel.uiState.value.hasMorePages)
+
+        fakeRepository.articlesToReturn = createArticles(20)
+        fakeRepository.totalResults = 60
+        viewModel.loadNextPage()
+        advanceUntilIdle()
+
+        assertEquals(40, viewModel.uiState.value.articles.size)
+        assertEquals(2, viewModel.uiState.value.currentPage)
+    }
+
+    @Test
+    fun `disk cache preserved when network fails`() = runTest {
+        val cachedArticles = createArticles(5)
+        val fakeCache = FakeArticleCache()
+        fakeCache.save(cachedArticles)
+
+        fakeRepository.errorToThrow = RuntimeException("No internet")
+
+        val viewModel = NewsListViewModel(fakeRepository, fakeCache)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertEquals(5, state.articles.size)
+        assertTrue(state.error!!.contains("previously loaded"))
+        assertTrue(state.error!!.contains("outdated"))
+    }
+
+    @Test
+    fun `successful load persists articles to disk cache`() = runTest {
+        val fakeCache = FakeArticleCache()
+        fakeRepository.articlesToReturn = createArticles(20)
+        fakeRepository.totalResults = 50
+
+        val viewModel = NewsListViewModel(fakeRepository, fakeCache)
+        advanceUntilIdle()
+
+        assertEquals(20, fakeCache.load().size)
+    }
+
+    @Test
+    fun `pagination persists all articles to disk cache`() = runTest {
+        val fakeCache = FakeArticleCache()
+        fakeRepository.articlesToReturn = createArticles(20)
+        fakeRepository.totalResults = 60
+
+        val viewModel = NewsListViewModel(fakeRepository, fakeCache)
+        advanceUntilIdle()
+
+        fakeRepository.articlesToReturn = createArticles(20)
+        viewModel.loadNextPage()
+        advanceUntilIdle()
+
+        assertEquals(40, fakeCache.load().size)
+    }
 }
