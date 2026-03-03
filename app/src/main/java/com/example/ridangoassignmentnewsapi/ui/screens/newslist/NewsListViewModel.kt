@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+private const val PAGE_SIZE = 20
+
 data class NewsListUiState(
     val articles: List<Article> = emptyList(),
     val isLoading: Boolean = false,
@@ -34,14 +36,14 @@ class NewsListViewModel(
     fun loadArticles() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            repository.getTopHeadlines(page = 1).fold(
-                onSuccess = { articles ->
+            repository.getTopHeadlines(page = 1, pageSize = PAGE_SIZE).fold(
+                onSuccess = { result ->
                     _uiState.update {
                         it.copy(
-                            articles = articles,
+                            articles = result.articles,
                             isLoading = false,
                             currentPage = 1,
-                            hasMorePages = articles.size >= 21
+                            hasMorePages = result.articles.isNotEmpty()
                         )
                     }
                 },
@@ -64,14 +66,14 @@ class NewsListViewModel(
         viewModelScope.launch {
             val nextPage = state.currentPage + 1
             _uiState.update { it.copy(isLoadingMore = true) }
-            repository.getTopHeadlines(page = nextPage).fold(
-                onSuccess = { articles ->
+            repository.getTopHeadlines(page = nextPage, pageSize = PAGE_SIZE).fold(
+                onSuccess = { result ->
                     _uiState.update {
                         it.copy(
-                            articles = it.articles + articles,
+                            articles = it.articles + result.articles,
                             isLoadingMore = false,
                             currentPage = nextPage,
-                            hasMorePages = articles.size >= 21
+                            hasMorePages = result.articles.isNotEmpty()
                         )
                     }
                 },

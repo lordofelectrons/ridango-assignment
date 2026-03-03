@@ -25,10 +25,11 @@ class NewsRepositoryImplTest {
         val result = repository.getTopHeadlines(page = 1)
 
         assertTrue(result.isSuccess)
-        val articles = result.getOrThrow()
-        assertEquals(2, articles.size)
-        assertEquals("First Article", articles[0].title)
-        assertEquals("Second Article", articles[1].title)
+        val headlinesResult = result.getOrThrow()
+        assertEquals(2, headlinesResult.articles.size)
+        assertEquals("First Article", headlinesResult.articles[0].title)
+        assertEquals("Second Article", headlinesResult.articles[1].title)
+        assertEquals(2, headlinesResult.totalResults)
     }
 
     @Test
@@ -47,7 +48,7 @@ class NewsRepositoryImplTest {
         val result = repository.getTopHeadlines(page = 1)
 
         assertTrue(result.isSuccess)
-        assertEquals(1, result.getOrThrow().size)
+        assertEquals(1, result.getOrThrow().articles.size)
     }
 
     @Test
@@ -84,7 +85,7 @@ class NewsRepositoryImplTest {
         val result = repository.getTopHeadlines(page = 1)
 
         assertTrue(result.isSuccess)
-        val article = result.getOrThrow().first()
+        val article = result.getOrThrow().articles.first()
         assertEquals("Title Only", article.title)
         assertEquals("", article.author)
         assertEquals("", article.description)

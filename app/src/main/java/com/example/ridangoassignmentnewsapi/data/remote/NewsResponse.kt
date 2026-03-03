@@ -23,3 +23,9 @@ data class SourceDto(
     @SerializedName("id") val id: String?,
     @SerializedName("name") val name: String?
 )
+
+data class ApiErrorResponse(
+    @SerializedName("status") val status: String?,
+    @SerializedName("code") val code: String?,
+    @SerializedName("message") val message: String?
+)

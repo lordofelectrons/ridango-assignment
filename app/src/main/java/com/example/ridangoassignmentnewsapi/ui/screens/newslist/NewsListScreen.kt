@@ -106,13 +106,23 @@ private fun ArticleGrid(
     LaunchedEffect(gridState) {
         snapshotFlow {
             val layoutInfo = gridState.layoutInfo
-            val lastVisibleIndex = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+            val lastVisibleIndex = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: -1
             val totalItems = layoutInfo.totalItemsCount
             lastVisibleIndex to totalItems
         }.collect { (lastVisible, total) ->
             if (total > 0 && lastVisible >= total - 6) {
                 onLoadMore()
             }
+        }
+    }
+
+    // Re-check after new items are added — if still near the bottom, load more
+    LaunchedEffect(articles.size) {
+        val layoutInfo = gridState.layoutInfo
+        val lastVisibleIndex = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: -1
+        val totalItems = layoutInfo.totalItemsCount
+        if (totalItems > 0 && lastVisibleIndex >= totalItems - 6) {
+            onLoadMore()
         }
     }
 

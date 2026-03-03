@@ -51,14 +51,15 @@ class NewsListViewModelTest {
 
     @Test
     fun `initial load success populates articles`() = runTest {
-        val articles = createArticles(21)
+        val articles = createArticles(20)
         fakeRepository.articlesToReturn = articles
+        fakeRepository.totalResults = 50
 
         val viewModel = NewsListViewModel(fakeRepository)
         advanceUntilIdle()
 
         val state = viewModel.uiState.value
-        assertEquals(21, state.articles.size)
+        assertEquals(20, state.articles.size)
         assertFalse(state.isLoading)
         assertNull(state.error)
         assertTrue(state.hasMorePages)
@@ -79,23 +80,44 @@ class NewsListViewModelTest {
 
     @Test
     fun `loadNextPage appends articles`() = runTest {
-        fakeRepository.articlesToReturn = createArticles(21)
+        fakeRepository.articlesToReturn = createArticles(20)
+        fakeRepository.totalResults = 50
         val viewModel = NewsListViewModel(fakeRepository)
         advanceUntilIdle()
 
         fakeRepository.articlesToReturn = createArticles(10)
+        fakeRepository.totalResults = 50
         viewModel.loadNextPage()
         advanceUntilIdle()
 
         val state = viewModel.uiState.value
-        assertEquals(31, state.articles.size)
+        assertEquals(30, state.articles.size)
         assertEquals(2, state.currentPage)
-        assertFalse(state.hasMorePages) // 10 < 21, so no more pages
+        assertTrue(state.hasMorePages) // returned non-empty, so more might exist
+    }
+
+    @Test
+    fun `loadNextPage stops when API returns empty`() = runTest {
+        fakeRepository.articlesToReturn = createArticles(20)
+        fakeRepository.totalResults = 20
+        val viewModel = NewsListViewModel(fakeRepository)
+        advanceUntilIdle()
+
+        fakeRepository.articlesToReturn = emptyList()
+        fakeRepository.totalResults = 20
+        viewModel.loadNextPage()
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertEquals(20, state.articles.size)
+        assertFalse(state.hasMorePages)
     }
 
     @Test
     fun `loadNextPage does nothing when no more pages`() = runTest {
-        fakeRepository.articlesToReturn = createArticles(10)
+        // Initial load returns empty -> hasMorePages = false
+        fakeRepository.articlesToReturn = emptyList()
+        fakeRepository.totalResults = 0
         val viewModel = NewsListViewModel(fakeRepository)
         advanceUntilIdle()
 
@@ -108,11 +130,13 @@ class NewsListViewModelTest {
 
     @Test
     fun `loadNextPage does not duplicate when already loading`() = runTest {
-        fakeRepository.articlesToReturn = createArticles(21)
+        fakeRepository.articlesToReturn = createArticles(20)
+        fakeRepository.totalResults = 60
         val viewModel = NewsListViewModel(fakeRepository)
         advanceUntilIdle()
 
-        fakeRepository.articlesToReturn = createArticles(21)
+        fakeRepository.articlesToReturn = createArticles(20)
+        fakeRepository.totalResults = 60
         viewModel.loadNextPage()
         viewModel.loadNextPage() // should be ignored
         advanceUntilIdle()

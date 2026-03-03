@@ -4,6 +4,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import com.example.ridangoassignmentnewsapi.data.repository.HeadlinesResult
 import com.example.ridangoassignmentnewsapi.data.repository.NewsRepository
 import com.example.ridangoassignmentnewsapi.domain.model.Article
 import com.example.ridangoassignmentnewsapi.ui.screens.newslist.NewsListScreen
@@ -37,9 +38,9 @@ class NewsListScreenTest {
         error: Exception? = null
     ): NewsRepository {
         return object : NewsRepository {
-            override suspend fun getTopHeadlines(page: Int, pageSize: Int): Result<List<Article>> {
+            override suspend fun getTopHeadlines(page: Int, pageSize: Int): Result<HeadlinesResult> {
                 error?.let { return Result.failure(it) }
-                return Result.success(articles)
+                return Result.success(HeadlinesResult(articles, articles.size))
             }
         }
     }
