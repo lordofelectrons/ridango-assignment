@@ -45,6 +45,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.ridangoassignmentnewsapi.domain.model.Article
 import com.example.ridangoassignmentnewsapi.ui.components.ErrorState
@@ -140,6 +141,7 @@ fun NewsListScreen(
                             articles = uiState.articles,
                             columns = columns,
                             isLoadingMore = uiState.isLoadingMore,
+                            hasMorePages = uiState.hasMorePages,
                             gridState = gridState,
                             onArticleClick = onArticleClick,
                             onLoadMore = { viewModel.loadNextPage() },
@@ -157,6 +159,7 @@ private fun ArticleGrid(
     articles: List<Article>,
     columns: Int,
     isLoadingMore: Boolean,
+    hasMorePages: Boolean,
     gridState: LazyGridState,
     onArticleClick: (Article) -> Unit,
     onLoadMore: () -> Unit,
@@ -209,6 +212,18 @@ private fun ArticleGrid(
                 ) {
                     CircularProgressIndicator()
                 }
+            }
+        } else if (!hasMorePages && articles.isNotEmpty()) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                Text(
+                    text = "You've reached the end of the feed",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }
