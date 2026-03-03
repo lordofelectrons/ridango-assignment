@@ -16,6 +16,8 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class NewsListViewModelTest {
@@ -235,5 +237,92 @@ class NewsListViewModelTest {
         advanceUntilIdle()
 
         assertEquals(40, fakeCache.load().size)
+    }
+
+    // --- Error classification tests ---
+
+    @Test
+    fun `error shows no internet for UnknownHostException`() = runTest {
+        fakeRepository.errorToThrow = UnknownHostException("Unable to resolve host")
+
+        val viewModel = NewsListViewModel(fakeRepository)
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.error!!.contains("No internet connection"))
+    }
+
+    @Test
+    fun `error shows no internet for wrapped UnknownHostException`() = runTest {
+        fakeRepository.errorToThrow = RuntimeException("wrap", UnknownHostException())
+
+        val viewModel = NewsListViewModel(fakeRepository)
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.error!!.contains("No internet connection"))
+    }
+
+    @Test
+    fun `error shows timeout for SocketTimeoutException`() = runTest {
+        fakeRepository.errorToThrow = SocketTimeoutException("timeout")
+
+        val viewModel = NewsListViewModel(fakeRepository)
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.error!!.contains("Connection timed out"))
+    }
+
+    @Test
+    fun `error shows rate limit for too many requests message`() = runTest {
+        fakeRepository.errorToThrow = RuntimeException("You have made too many requests")
+
+        val viewModel = NewsListViewModel(fakeRepository)
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.error!!.contains("API rate limit exceeded"))
+    }
+
+    @Test
+    fun `error shows rate limit for rateLimited code`() = runTest {
+        fakeRepository.errorToThrow = RuntimeException("rateLimited")
+
+        val viewModel = NewsListViewModel(fakeRepository)
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.error!!.contains("API rate limit exceeded"))
+    }
+
+    // --- clearError test ---
+
+    @Test
+    fun `clearError clears the error from state`() = runTest {
+        fakeRepository.errorToThrow = RuntimeException("fail")
+
+        val viewModel = NewsListViewModel(fakeRepository)
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.error != null)
+
+        viewModel.clearError()
+        assertNull(viewModel.uiState.value.error)
+    }
+
+    // --- loadNextPage error preserves existing articles ---
+
+    @Test
+    fun `loadNextPage error preserves page 1 articles`() = runTest {
+        fakeRepository.articlesToReturn = createArticles(20)
+        fakeRepository.totalResults = 60
+
+        val viewModel = NewsListViewModel(fakeRepository)
+        advanceUntilIdle()
+        assertEquals(20, viewModel.uiState.value.articles.size)
+
+        fakeRepository.errorToThrow = RuntimeException("page 2 failed")
+        fakeRepository.articlesToReturn = emptyList()
+        viewModel.loadNextPage()
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertEquals(20, state.articles.size) // page 1 articles preserved
+        assertTrue(state.error!!.contains("Couldn't load more articles"))
     }
 }
