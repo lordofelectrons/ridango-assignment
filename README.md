@@ -8,6 +8,7 @@ MVVM with manual dependency injection (ServiceLocator pattern).
 
 ```
 com.example.ridangoassignmentnewsapi/
+  data/local/           -- Disk cache (SharedPreferences)
   data/remote/          -- Retrofit API service + DTOs
   data/repository/      -- Repository interface + implementation
   di/                   -- ServiceLocator (manual DI)
