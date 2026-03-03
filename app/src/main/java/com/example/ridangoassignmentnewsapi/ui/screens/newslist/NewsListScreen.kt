@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -21,12 +22,17 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,6 +51,23 @@ fun NewsListScreen(
     val uiState by viewModel.uiState.collectAsState()
     val configuration = LocalConfiguration.current
     val columns = if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) 3 else 2
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Show error as Snackbar when articles are already loaded
+    LaunchedEffect(uiState.error) {
+        val error = uiState.error ?: return@LaunchedEffect
+        if (uiState.articles.isNotEmpty()) {
+            val result = snackbarHostState.showSnackbar(
+                message = error,
+                actionLabel = "Retry",
+                duration = SnackbarDuration.Long
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                viewModel.loadArticles()
+            }
+            viewModel.clearError()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -68,7 +91,8 @@ fun NewsListScreen(
                     }
                 }
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
             when {
@@ -80,13 +104,19 @@ fun NewsListScreen(
                     )
                 }
                 else -> {
-                    ArticleGrid(
-                        articles = uiState.articles,
-                        columns = columns,
-                        isLoadingMore = uiState.isLoadingMore,
-                        onArticleClick = onArticleClick,
-                        onLoadMore = { viewModel.loadNextPage() }
-                    )
+                    Column {
+                        if (uiState.isLoadingMore) {
+                            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                        }
+                        ArticleGrid(
+                            articles = uiState.articles,
+                            columns = columns,
+                            isLoadingMore = uiState.isLoadingMore,
+                            onArticleClick = onArticleClick,
+                            onLoadMore = { viewModel.loadNextPage() },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
             }
         }
@@ -99,7 +129,8 @@ private fun ArticleGrid(
     columns: Int,
     isLoadingMore: Boolean,
     onArticleClick: (Article) -> Unit,
-    onLoadMore: () -> Unit
+    onLoadMore: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val gridState = rememberLazyGridState()
 
@@ -132,7 +163,7 @@ private fun ArticleGrid(
         contentPadding = PaddingValues(8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier.fillMaxSize()
+        modifier = modifier.fillMaxSize()
     ) {
         items(articles, key = { it.url.ifEmpty { it.title } }) { article ->
             com.example.ridangoassignmentnewsapi.ui.components.ArticleCard(

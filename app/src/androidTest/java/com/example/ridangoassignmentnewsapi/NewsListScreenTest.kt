@@ -98,7 +98,7 @@ class NewsListScreenTest {
             NewsListScreen(viewModel = viewModel, onArticleClick = {})
         }
 
-        composeTestRule.onNodeWithText("Network error").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Couldn't load articles. Network error").assertIsDisplayed()
         composeTestRule.onNodeWithText("Retry").assertIsDisplayed()
     }
 

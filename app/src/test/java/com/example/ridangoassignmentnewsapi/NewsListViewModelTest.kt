@@ -75,7 +75,7 @@ class NewsListViewModelTest {
         val state = viewModel.uiState.value
         assertTrue(state.articles.isEmpty())
         assertFalse(state.isLoading)
-        assertEquals("Network error", state.error)
+        assertEquals("Couldn't load articles. Network error", state.error)
     }
 
     @Test

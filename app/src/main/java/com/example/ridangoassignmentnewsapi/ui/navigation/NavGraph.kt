@@ -1,6 +1,7 @@
 package com.example.ridangoassignmentnewsapi.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -14,11 +15,15 @@ import com.example.ridangoassignmentnewsapi.ui.screens.newslist.NewsListViewMode
 @Composable
 fun NewsNavGraph() {
     val navController = rememberNavController()
+    val context = LocalContext.current
 
     NavHost(navController = navController, startDestination = "news_list") {
         composable("news_list") {
             val viewModel: NewsListViewModel = viewModel(
-                factory = NewsListViewModel.Factory(ServiceLocator.newsRepository)
+                factory = NewsListViewModel.Factory(
+                    repository = ServiceLocator.newsRepository,
+                    articleCache = ServiceLocator.articleCache(context)
+                )
             )
             NewsListScreen(
                 viewModel = viewModel,

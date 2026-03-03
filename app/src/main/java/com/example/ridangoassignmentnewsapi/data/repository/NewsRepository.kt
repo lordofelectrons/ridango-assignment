@@ -8,5 +8,5 @@ data class HeadlinesResult(
 )
 
 interface NewsRepository {
-    suspend fun getTopHeadlines(page: Int, pageSize: Int = 20): Result<HeadlinesResult>
+    suspend fun getTopHeadlines(page: Int, pageSize: Int = 22): Result<HeadlinesResult>
 }

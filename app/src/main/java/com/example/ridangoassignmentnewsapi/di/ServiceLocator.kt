@@ -1,5 +1,7 @@
 package com.example.ridangoassignmentnewsapi.di
 
+import android.content.Context
+import com.example.ridangoassignmentnewsapi.data.local.ArticleCache
 import com.example.ridangoassignmentnewsapi.data.remote.NewsApiService
 import com.example.ridangoassignmentnewsapi.data.repository.NewsRepository
 import com.example.ridangoassignmentnewsapi.data.repository.NewsRepositoryImpl
@@ -34,5 +36,9 @@ object ServiceLocator {
 
     val newsRepository: NewsRepository by lazy {
         NewsRepositoryImpl(newsApiService)
+    }
+
+    fun articleCache(context: Context): ArticleCache {
+        return ArticleCache(context.applicationContext)
     }
 }
