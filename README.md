@@ -49,14 +49,31 @@ UI tests (requires emulator/device):
 ./gradlew connectedAndroidTest
 ```
 
+## Tech Stack
+
+| Category | Technology |
+|---|---|
+| Language & Platform | Kotlin, Android (minSdk 24, targetSdk 35, AGP 9.1.0) |
+| UI | Jetpack Compose + Material3, Coil (image loading), Navigation Compose |
+| Networking | Retrofit 2.11.0 + Gson converter, OkHttp 4.12.0 |
+| Serialization | Protocol Buffers (protobuf-javalite 4.29.3, manual encoding) |
+| Caching | SharedPreferences + Gson |
+| Architecture | MVVM, manual DI (ServiceLocator), Coroutines / StateFlow |
+| Testing | JUnit, Mockito-Kotlin, Compose UI Test, Espresso |
+| CI | GitHub Actions (JDK 21, Gradle) |
+
 ## Features
 
 - **Adaptive grid layout**: 2 columns in portrait, 3 in landscape
-- **Infinite scroll pagination**: Loads more articles as you scroll
+- **Infinite scroll pagination**: Automatically loads more articles as you scroll, with a loading indicator and "end of feed" message
+- **Offline caching**: Previously loaded articles are persisted to disk and shown when the network is unavailable
+- **Smart error handling**: Distinguishes between no internet, API rate limits, timeouts, and other errors — with retry via Snackbar
 - **Article detail screen**: Full article view with hero image, metadata, and content
-- **Open in Browser**: Opens the full article in your browser
+- **Open in Browser**: Opens the full article in your default browser
 - **Save with Protocol Buffers**: Serializes article data using protobuf and logs to Logcat (mock API)
-- **Error handling**: Error states with retry functionality
+- **Scroll to top**: Floating action button to jump back to the top of the feed
+- **Pull to refresh**: Toolbar refresh button reloads articles and scrolls to top
+- **CI pipeline**: GitHub Actions workflow builds the APK and runs unit tests on every push/PR
 
 ## Known Limitations
 
