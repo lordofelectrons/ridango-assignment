@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+option java_package = "com.example.ridangoassignmentnewsapi.proto";
+option java_outer_classname = "ArticleProto";
+option optimize_for = LITE_RUNTIME;
+
+message SavedArticle {
+  string source_name = 1;
+  string author = 2;
+  string title = 3;
+  string description = 4;
+  string url = 5;
+  string url_to_image = 6;
+  string published_at = 7;
+  string content = 8;
+}
